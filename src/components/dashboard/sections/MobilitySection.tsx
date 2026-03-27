@@ -1,7 +1,9 @@
 import { Globe, MapPin, CheckCircle2, Clock, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import SectionWrapper from "../SectionWrapper";
+import MobilityForm from "../forms/MobilityForm";
 
-const partners = [
+const fallbackPartners = [
   { name: "University of Amsterdam", country: "Netherlands", flag: "🇳🇱", spots: 5 },
   { name: "Technical University of Munich", country: "Germany", flag: "🇩🇪", spots: 3 },
   { name: "University of Tokyo", country: "Japan", flag: "🇯🇵", spots: 2 },
@@ -14,12 +16,11 @@ const steps = [
   { label: "Approved", done: false },
 ];
 
-const MobilitySection = () => (
-  <div className="animate-fade-in">
+const MobilityContent = () => (
+  <>
     <h2 className="text-2xl font-bold text-foreground mb-1">Mobility & Exchange</h2>
     <p className="text-muted-foreground text-sm mb-6">Explore exchange opportunities with partner universities</p>
 
-    {/* Status tracker */}
     <div className="glass-card rounded-xl p-6 mb-6">
       <h3 className="font-semibold text-foreground mb-4">Your Application Status</h3>
       <div className="flex items-center gap-2">
@@ -35,7 +36,6 @@ const MobilitySection = () => (
       </div>
     </div>
 
-    {/* Partner universities */}
     <div className="flex items-center justify-between mb-4">
       <h3 className="font-semibold text-foreground">Partner Universities</h3>
       <Button className="bg-accent text-accent-foreground hover:bg-gold-light">
@@ -44,7 +44,7 @@ const MobilitySection = () => (
     </div>
 
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      {partners.map((p) => (
+      {fallbackPartners.map((p) => (
         <div key={p.name} className="glass-card rounded-xl p-5 hover:shadow-md transition-shadow flex items-start gap-4">
           <span className="text-3xl">{p.flag}</span>
           <div className="flex-1">
@@ -57,7 +57,17 @@ const MobilitySection = () => (
         </div>
       ))}
     </div>
-  </div>
+  </>
+);
+
+const MobilitySection = () => (
+  <SectionWrapper
+    sectionKey="mobility"
+    emptyForm={<MobilityForm />}
+    fallbackContent={<MobilityContent />}
+  >
+    {() => <MobilityContent />}
+  </SectionWrapper>
 );
 
 export default MobilitySection;

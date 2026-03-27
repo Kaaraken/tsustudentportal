@@ -1,8 +1,10 @@
 import { DollarSign, CreditCard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import SectionWrapper from "../SectionWrapper";
+import PaymentsForm from "../forms/PaymentsForm";
 
-const history = [
+const fallbackHistory = [
   { date: "Mar 1, 2026", desc: "Tuition – Spring 2026", amount: "$4,250.00", status: "Paid" as const },
   { date: "Feb 15, 2026", desc: "Lab Fee – Data Structures", amount: "$150.00", status: "Paid" as const },
   { date: "Jan 20, 2026", desc: "Student Activity Fee", amount: "$75.00", status: "Paid" as const },
@@ -17,12 +19,10 @@ const breakdown = [
   { item: "Health Insurance", amount: "$450.00" },
 ];
 
-const PaymentsSection = () => (
-  <div className="animate-fade-in">
+const PaymentsContent = () => (
+  <>
     <h2 className="text-2xl font-bold text-foreground mb-6">Payments</h2>
-
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-      {/* Balance card */}
       <div className="lg:col-span-1 gradient-gold rounded-xl p-6 text-navy-dark">
         <DollarSign className="w-8 h-8 mb-2 opacity-80" />
         <p className="text-sm font-medium opacity-80">Current Balance Due</p>
@@ -31,8 +31,6 @@ const PaymentsSection = () => (
           <CreditCard className="w-4 h-4 mr-2" /> Make a Payment
         </Button>
       </div>
-
-      {/* Breakdown */}
       <div className="lg:col-span-2 glass-card rounded-xl p-6">
         <h3 className="font-semibold text-foreground mb-4">Spring 2026 Breakdown</h3>
         <div className="space-y-3">
@@ -49,8 +47,6 @@ const PaymentsSection = () => (
         </div>
       </div>
     </div>
-
-    {/* Payment history */}
     <h3 className="font-semibold text-foreground mb-4">Payment History</h3>
     <div className="glass-card rounded-xl overflow-hidden">
       <div className="overflow-x-auto">
@@ -64,7 +60,7 @@ const PaymentsSection = () => (
             </tr>
           </thead>
           <tbody>
-            {history.map((h, i) => (
+            {fallbackHistory.map((h, i) => (
               <tr key={i} className="border-b border-border last:border-0">
                 <td className="p-4 text-muted-foreground">{h.date}</td>
                 <td className="p-4 text-foreground">{h.desc}</td>
@@ -80,7 +76,17 @@ const PaymentsSection = () => (
         </table>
       </div>
     </div>
-  </div>
+  </>
+);
+
+const PaymentsSection = () => (
+  <SectionWrapper
+    sectionKey="payments"
+    emptyForm={<PaymentsForm />}
+    fallbackContent={<PaymentsContent />}
+  >
+    {() => <PaymentsContent />}
+  </SectionWrapper>
 );
 
 export default PaymentsSection;

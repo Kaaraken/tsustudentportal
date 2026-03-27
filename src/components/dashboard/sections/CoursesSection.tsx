@@ -2,8 +2,10 @@ import { useState } from "react";
 import { Search, BookOpen } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
+import SectionWrapper from "../SectionWrapper";
+import CoursesForm from "../forms/CoursesForm";
 
-const courses = [
+const fallbackCourses = [
   { code: "MATH301", name: "Linear Algebra", instructor: "Dr. Sarah Chen", progress: 72, grade: "A-" },
   { code: "CS204", name: "Data Structures", instructor: "Prof. James Miller", progress: 85, grade: "A" },
   { code: "PHY201", name: "Quantum Mechanics", instructor: "Dr. Elena Rossi", progress: 60, grade: "B+" },
@@ -12,14 +14,14 @@ const courses = [
   { code: "CS310", name: "Machine Learning", instructor: "Prof. Alex Kumar", progress: 30, grade: "B+" },
 ];
 
-const CoursesSection = () => {
+const CourseGrid = ({ courses }: { courses: typeof fallbackCourses }) => {
   const [search, setSearch] = useState("");
   const filtered = courses.filter(
     (c) => c.name.toLowerCase().includes(search.toLowerCase()) || c.code.toLowerCase().includes(search.toLowerCase())
   );
 
   return (
-    <div className="animate-fade-in">
+    <>
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
           <h2 className="text-2xl font-bold text-foreground">My Courses</h2>
@@ -30,7 +32,6 @@ const CoursesSection = () => {
           <Input placeholder="Search courses..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
         </div>
       </div>
-
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
         {filtered.map((course) => (
           <div key={course.code} className="glass-card rounded-xl p-5 hover:shadow-md transition-shadow group">
@@ -53,8 +54,18 @@ const CoursesSection = () => {
           </div>
         ))}
       </div>
-    </div>
+    </>
   );
 };
+
+const CoursesSection = () => (
+  <SectionWrapper
+    sectionKey="courses"
+    emptyForm={<CoursesForm />}
+    fallbackContent={<CourseGrid courses={fallbackCourses} />}
+  >
+    {(data) => <CourseGrid courses={Array.isArray(data) ? data : fallbackCourses} />}
+  </SectionWrapper>
+);
 
 export default CoursesSection;

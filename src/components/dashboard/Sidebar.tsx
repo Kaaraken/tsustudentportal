@@ -1,7 +1,7 @@
-import { BookOpen, CalendarDays, Plane, GraduationCap, CreditCard, FileText, Menu, X } from "lucide-react";
+import { BookOpen, CalendarDays, Plane, GraduationCap, CreditCard, FileText, Menu, X, UserCircle } from "lucide-react";
 import { useState } from "react";
 
-export type Section = "courses" | "schedule" | "mobility" | "program" | "payments" | "documents";
+export type Section = "courses" | "schedule" | "mobility" | "program" | "payments" | "documents" | "profile";
 
 const navItems: { id: Section; label: string; icon: typeof BookOpen }[] = [
   { id: "courses", label: "Courses", icon: BookOpen },
@@ -10,6 +10,7 @@ const navItems: { id: Section; label: string; icon: typeof BookOpen }[] = [
   { id: "program", label: "Program", icon: GraduationCap },
   { id: "payments", label: "Payments", icon: CreditCard },
   { id: "documents", label: "Documents", icon: FileText },
+  { id: "profile", label: "Profile", icon: UserCircle },
 ];
 
 interface SidebarProps {
@@ -45,7 +46,6 @@ const Sidebar = ({ active, onNavigate }: SidebarProps) => {
 
   return (
     <>
-      {/* Mobile trigger */}
       <button
         onClick={() => setMobileOpen(true)}
         className="lg:hidden fixed bottom-4 right-4 z-50 w-12 h-12 rounded-full bg-primary text-primary-foreground shadow-lg flex items-center justify-center"
@@ -53,7 +53,6 @@ const Sidebar = ({ active, onNavigate }: SidebarProps) => {
         <Menu className="w-5 h-5" />
       </button>
 
-      {/* Mobile overlay */}
       {mobileOpen && (
         <div className="fixed inset-0 z-50 lg:hidden">
           <div className="absolute inset-0 bg-foreground/40" onClick={() => setMobileOpen(false)} />
@@ -69,7 +68,6 @@ const Sidebar = ({ active, onNavigate }: SidebarProps) => {
         </div>
       )}
 
-      {/* Desktop sidebar */}
       <aside className="hidden lg:flex w-64 gradient-navy flex-col shrink-0">
         <div className="p-5 border-b border-sidebar-border">
           <p className="text-sidebar-foreground/60 text-xs uppercase tracking-wider font-semibold">Navigation</p>
