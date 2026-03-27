@@ -1,19 +1,18 @@
 import { useState } from "react";
-import { Shield, IdCard, Lock, Eye, EyeOff } from "lucide-react";
+import { IdCard, Lock, Eye, EyeOff, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useAuth } from "@/contexts/AuthContext";
 
-interface LoginProps {
-  onLogin: () => void;
-}
-
-const Login = ({ onLogin }: LoginProps) => {
+const Login = () => {
+  const { login } = useAuth();
   const [studentId, setStudentId] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<{ studentId?: string; password?: string; general?: string }>({});
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const newErrors: typeof errors = {};
 
@@ -25,11 +24,14 @@ const Login = ({ onLogin }: LoginProps) => {
       return;
     }
 
-    if (studentId === "STU123456" && password === "password123") {
-      setErrors({});
-      onLogin();
-    } else {
-      setErrors({ general: "Invalid Student ID or password. Try STU123456 / password123" });
+    setLoading(true);
+    setErrors({});
+    try {
+      await login(studentId, password);
+    } catch (err: any) {
+      setErrors({ general: err.message || "Invalid TSU credentials" });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -49,11 +51,13 @@ const Login = ({ onLogin }: LoginProps) => {
 
       <div className="w-full max-w-md animate-fade-in relative z-10">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-accent/20 border-2 border-accent mb-4">
-            <Shield className="w-10 h-10 text-accent" />
-          </div>
-          <h1 className="text-3xl font-bold text-primary-foreground">Student Portal</h1>
-          <p className="text-primary-foreground/60 mt-1">Sign in to access your academic dashboard</p>
+          <img
+            src="https://tsu.ge/assets/images/logo/logo-ka.svg"
+            alt="TSU Logo"
+            className="h-20 mx-auto mb-4"
+          />
+          <h1 className="text-3xl font-bold text-primary-foreground">TSU Student Portal</h1>
+          <p className="text-primary-foreground/60 mt-1">Tbilisi State University — Student Self-Service</p>
         </div>
 
         <div className="bg-card rounded-xl shadow-2xl p-8">
@@ -100,8 +104,12 @@ const Login = ({ onLogin }: LoginProps) => {
               {errors.password && <p className="text-xs text-destructive">{errors.password}</p>}
             </div>
 
-            <Button type="submit" className="w-full h-11 bg-accent text-accent-foreground hover:bg-gold-light font-semibold text-base">
-              Sign In
+            <Button
+              type="submit"
+              disabled={loading}
+              className="w-full h-11 bg-accent text-accent-foreground hover:bg-gold-light font-semibold text-base"
+            >
+              {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Sign In"}
             </Button>
 
             <p className="text-center">
@@ -113,7 +121,7 @@ const Login = ({ onLogin }: LoginProps) => {
         </div>
 
         <p className="text-center text-primary-foreground/40 text-xs mt-6">
-          © 2026 University Portal. All rights reserved.
+          © 2026 Tbilisi State University. All rights reserved.
         </p>
       </div>
     </div>
