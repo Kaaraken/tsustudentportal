@@ -1,23 +1,24 @@
 import { Progress } from "@/components/ui/progress";
+import SectionWrapper from "../SectionWrapper";
+import ProgramForm from "../forms/ProgramForm";
 
-const semesters = [
+const fallbackSemesters = [
   { sem: "Fall 2024", courses: ["Calculus I", "Intro to CS", "Physics I", "Academic Writing"], credits: 16 },
   { sem: "Spring 2025", courses: ["Calculus II", "OOP Programming", "Physics II", "Philosophy"], credits: 16 },
   { sem: "Fall 2025", courses: ["Discrete Math", "Algorithms", "Electronics", "Statistics"], credits: 16 },
   { sem: "Spring 2026", courses: ["Linear Algebra", "Data Structures", "Quantum Mech.", "English Lit."], credits: 16, current: true },
 ];
 
-const ProgramSection = () => {
+const ProgramContent = () => {
   const totalRequired = 128;
   const completed = 60;
   const gpa = 3.72;
 
   return (
-    <div className="animate-fade-in">
+    <>
       <h2 className="text-2xl font-bold text-foreground mb-1">Degree Program</h2>
       <p className="text-muted-foreground text-sm mb-6">B.Sc. Computer Science & Mathematics</p>
 
-      {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
         <div className="glass-card rounded-xl p-5 text-center">
           <p className="text-4xl font-bold text-accent">{gpa}</p>
@@ -37,10 +38,9 @@ const ProgramSection = () => {
         </div>
       </div>
 
-      {/* Timeline */}
       <h3 className="font-semibold text-foreground mb-4">Course Plan</h3>
       <div className="space-y-4">
-        {semesters.map((s) => (
+        {fallbackSemesters.map((s: any) => (
           <div key={s.sem} className={`glass-card rounded-xl p-5 ${s.current ? "ring-2 ring-accent" : ""}`}>
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
@@ -50,15 +50,25 @@ const ProgramSection = () => {
               <span className="text-sm text-muted-foreground">{s.credits} credits</span>
             </div>
             <div className="flex flex-wrap gap-2">
-              {s.courses.map((c) => (
+              {s.courses.map((c: string) => (
                 <span key={c} className="text-xs bg-muted px-3 py-1.5 rounded-full text-foreground">{c}</span>
               ))}
             </div>
           </div>
         ))}
       </div>
-    </div>
+    </>
   );
 };
+
+const ProgramSection = () => (
+  <SectionWrapper
+    sectionKey="program"
+    emptyForm={<ProgramForm />}
+    fallbackContent={<ProgramContent />}
+  >
+    {() => <ProgramContent />}
+  </SectionWrapper>
+);
 
 export default ProgramSection;
