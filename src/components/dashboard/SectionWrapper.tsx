@@ -1,5 +1,5 @@
 import { RefreshCw, AlertTriangle } from "lucide-react";
-import { useData, type SectionData } from "@/contexts/DataContext";
+import { useData } from "@/contexts/DataContext";
 import { Button } from "@/components/ui/button";
 
 interface SectionWrapperProps {
@@ -7,6 +7,7 @@ interface SectionWrapperProps {
   children: (data: any) => React.ReactNode;
   emptyForm: React.ReactNode;
   fallbackContent: React.ReactNode;
+  loadingContent?: React.ReactNode;
 }
 
 const formatAgo = (ts: number) => {
@@ -16,11 +17,15 @@ const formatAgo = (ts: number) => {
   return `${mins} minutes ago`;
 };
 
-const SectionWrapper = ({ sectionKey, children, emptyForm, fallbackContent }: SectionWrapperProps) => {
-  const { sections, refreshSection, globalLoading } = useData();
+const SectionWrapper = ({ sectionKey, children, emptyForm, fallbackContent, loadingContent }: SectionWrapperProps) => {
+  const { sections, refreshSection, globalLoading, loading } = useData();
   const section = sections[sectionKey];
 
-  // No API data loaded — show fallback (hardcoded content)
+  if (loading && !section) {
+    return <div className="relative">{loadingContent || fallbackContent}</div>;
+  }
+
+  // No API data loaded
   if (!section) {
     return <div className="relative">{fallbackContent}</div>;
   }
@@ -47,7 +52,7 @@ const SectionWrapper = ({ sectionKey, children, emptyForm, fallbackContent }: Se
       {section.stale && (
         <div className="mb-4 flex items-center gap-2 bg-warning/10 border border-warning/30 text-warning rounded-lg p-3 text-sm">
           <AlertTriangle className="w-4 h-4 shrink-0" />
-          ⚠️ Data may be outdated — last synced {formatAgo(section.lastUpdated)}
+          ⚠ მონაცემები შეიძლება მოძველებული იყოს
         </div>
       )}
 

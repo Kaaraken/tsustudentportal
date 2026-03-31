@@ -17,11 +17,19 @@ const ProfileSection = () => {
   const coursesData = sections.courses?.data;
   const paymentsData = sections.payments?.data;
   const documentsData = sections.documents?.data;
+  const scheduleData = Array.isArray(sections.schedule?.data) ? sections.schedule.data : [];
 
-  const gpa = programData?.gpa ?? 3.72;
-  const creditsCompleted = programData?.creditsCompleted ?? 120;
-  const creditsTotal = programData?.creditsTotal ?? 240;
-  const gpaColor = gpa >= 3.5 ? "text-success" : gpa >= 2.5 ? "text-warning" : "text-destructive";
+  const courses = Array.isArray(programData?.courses) ? programData.courses : [];
+  const totalEcts = courses.reduce((sum: number, c: any) => sum + (Number(String(c.ects || "0").replace(/[^\d.]/g, "")) || 0), 0);
+  const remainingEcts = courses.reduce(
+    (sum: number, c: any) => sum + (Number(String(c.remainingCredits || "0").replace(/[^\d.]/g, "")) || 0),
+    0
+  );
+  const creditsCompleted = Math.max(totalEcts - remainingEcts, 0);
+  const creditsTotal = totalEcts;
+
+  const uniqueSubjects = Array.from(new Set(scheduleData.map((item: any) => item.subject).filter(Boolean)));
+  const recentTransactions = Array.isArray(paymentsData?.transactions) ? paymentsData.transactions.slice(0, 3) : [];
 
   return (
     <div className="animate-fade-in max-w-3xl mx-auto space-y-6">
@@ -46,19 +54,18 @@ const ProfileSection = () => {
         <h3 className="font-semibold text-foreground mb-4">Academic Overview</h3>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div className="text-center">
-            <p className={`text-4xl font-bold ${gpaColor}`}>{gpa}</p>
-            <p className="text-sm text-muted-foreground mt-1">Current GPA</p>
+            <p className="text-xl font-semibold text-muted-foreground">N/A</p>
+            <p className="text-sm text-muted-foreground mt-1">მიუწვდომელია</p>
           </div>
           <div>
             <div className="flex justify-between text-sm mb-2">
               <span className="text-muted-foreground">Credits</span>
-              <span className="font-semibold text-foreground">{creditsCompleted}/{creditsTotal}</span>
+              <span className="font-semibold text-foreground">{creditsCompleted} / {creditsTotal} კრედიტი დასრულებული</span>
             </div>
-            <Progress value={(creditsCompleted / creditsTotal) * 100} className="h-3" />
-            <p className="text-xs text-muted-foreground mt-1">{Math.round((creditsCompleted / creditsTotal) * 100)}% complete</p>
+            <Progress value={creditsTotal > 0 ? (creditsCompleted / creditsTotal) * 100 : 0} className="h-3" />
           </div>
           <div className="text-center">
-            <p className="text-lg font-semibold text-foreground">Spring 2026 — Semester 4</p>
+            <p className="text-lg font-semibold text-foreground">გაზაფხული 2026 — სემესტრი 4</p>
             <p className="text-sm text-muted-foreground">Current Semester</p>
           </div>
         </div>
@@ -67,26 +74,17 @@ const ProfileSection = () => {
       {/* This Semester Courses */}
       <div className="glass-card rounded-xl p-6">
         <h3 className="font-semibold text-foreground mb-4">This Semester at a Glance</h3>
-        {coursesData ? (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-border">
-                  <th className="text-left p-2 text-muted-foreground font-medium">Course</th>
-                  <th className="text-right p-2 text-muted-foreground font-medium">Grade</th>
-                </tr>
-              </thead>
-              <tbody>
-                {(Array.isArray(coursesData) ? coursesData : []).slice(0, 6).map((c: any, i: number) => (
-                  <tr key={i} className="border-b border-border last:border-0">
-                    <td className="p-2 text-foreground">{c.name}</td>
-                    <td className="p-2 text-right">
-                      <Badge className="bg-accent/15 text-accent border-0">{c.grade}</Badge>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        {sections.schedule ? (
+          <div className="space-y-2">
+            {uniqueSubjects.length > 0 ? (
+              uniqueSubjects.map((subject, i) => (
+                <div key={`${subject}-${i}`} className="text-sm text-foreground bg-muted/30 rounded-lg px-3 py-2">
+                  {subject}
+                </div>
+              ))
+            ) : (
+              <p className="text-sm text-muted-foreground">სემესტრის საგნები დროებით მიუწვდომელია</p>
+            )}
           </div>
         ) : (
           <Skeleton className="h-24 w-full" />
@@ -96,17 +94,20 @@ const ProfileSection = () => {
       {/* Recent Payments */}
       <div className="glass-card rounded-xl p-6">
         <h3 className="font-semibold text-foreground mb-4">Recent Payments</h3>
-        {paymentsData?.history ? (
+        {sections.payments ? (
           <div className="space-y-3">
-            {paymentsData.history.slice(0, 3).map((h: any, i: number) => (
+            {recentTransactions.map((h: any, i: number) => (
               <div key={i} className="flex justify-between text-sm">
                 <div>
-                  <p className="text-foreground">{h.desc}</p>
-                  <p className="text-xs text-muted-foreground">{h.date}</p>
+                  <p className="text-foreground">{h.description || "-"}</p>
+                  <p className="text-xs text-muted-foreground">{h.academicYear || "-"}</p>
                 </div>
-                <span className="font-medium text-foreground">{h.amount}</span>
+                <span className="font-medium text-foreground">{h.amount || "-"}</span>
               </div>
             ))}
+            {recentTransactions.length === 0 && (
+              <p className="text-sm text-muted-foreground">გადახდების ინფორმაცია არ მოიძებნა</p>
+            )}
           </div>
         ) : (
           <Skeleton className="h-16 w-full" />

@@ -18,26 +18,63 @@ const ProfilePanel = ({ open, onClose, onViewProfile }: ProfilePanelProps) => {
     ? studentName.split(" ").map(w => w[0]).join("").toUpperCase().slice(0, 2)
     : "ST";
 
-  // Derive stats from DataContext
-  const coursesCount = sections.courses?.data?.length ?? null;
-  const gpa = sections.program?.data?.gpa ?? null;
-  const balance = sections.payments?.data?.balance ?? null;
-  const docsCount = sections.documents?.data?.length ?? null;
+  const coursesValue = "რეგისტრაცია დახურულია";
+  const gpaValue = "N/A";
+  const documentsValue = "მიუწვდომელია";
 
-  // Next class logic
-  const scheduleData = sections.schedule?.data;
-  let nextClass: string | null = null;
-  if (scheduleData && Array.isArray(scheduleData) && scheduleData.length > 0) {
-    const cls = scheduleData[0];
-    nextClass = `${cls.name} — ${cls.room}, ${cls.start}:00`;
-  }
+  const balanceDueText = String(sections.payments?.data?.balanceDue || "");
+  const balanceAmount = balanceDueText.split("ჯამური დავალიანება:")[1]?.trim() || "0.00";
+  const balanceNumber = Number(balanceAmount.replace(/,/g, "")) || 0;
+  const balanceValue = `${balanceAmount} ₾`;
 
-  // Mobility status
-  const mobilityStatus = sections.mobility?.data?.applicationStatus ?? null;
+  const dayMap: Record<string, number> = {
+    ორშაბათი: 1,
+    სამშაბათი: 2,
+    ოთხშაბათი: 3,
+    ხუთშაბათი: 4,
+    პარასკევი: 5
+  };
+  const scheduleData = Array.isArray(sections.schedule?.data) ? sections.schedule.data : [];
+  const now = new Date();
+  const today = now.getDay();
+  const minutesNow = now.getHours() * 60 + now.getMinutes();
 
-  const gpaColor = gpa !== null
-    ? gpa >= 3.5 ? "text-success" : gpa >= 2.5 ? "text-warning" : "text-destructive"
-    : "";
+  const parsedClasses = scheduleData
+    .map((item: any) => {
+      const parts = String(item.time || "").replace("თარიღი, დრო: ", "").split(", ");
+      const day = parts[0] || "";
+      const timeRange = parts[1] || "";
+      const start = timeRange.split(" - ")[0] || "";
+      const [h, m] = start.split(":").map(Number);
+      if (!dayMap[day] || Number.isNaN(h) || Number.isNaN(m)) {
+        return null;
+      }
+      return {
+        subject: item.subject || "-",
+        day,
+        dayNum: dayMap[day],
+        startMinutes: h * 60 + m,
+        start
+      };
+    })
+    .filter(Boolean) as Array<{ subject: string; day: string; dayNum: number; startMinutes: number; start: string }>;
+
+  const upcoming = parsedClasses
+    .filter((c) => c.dayNum === today && c.startMinutes >= minutesNow)
+    .sort((a, b) => a.startMinutes - b.startMinutes)[0];
+
+  const nextDay = parsedClasses
+    .filter((c) => c.dayNum > today)
+    .sort((a, b) => a.dayNum - b.dayNum || a.startMinutes - b.startMinutes)[0];
+
+  const wrappedDay = parsedClasses
+    .filter((c) => c.dayNum < today)
+    .sort((a, b) => a.dayNum - b.dayNum || a.startMinutes - b.startMinutes)[0];
+
+  const nextClassItem = upcoming || nextDay || wrappedDay || null;
+  const nextClass = nextClassItem ? `${nextClassItem.subject} — ${nextClassItem.day}, ${nextClassItem.start}` : "No upcoming classes";
+
+  const mobilityStatus = "No active application";
 
   const handleLogout = async () => {
     onClose();
@@ -75,19 +112,17 @@ const ProfilePanel = ({ open, onClose, onViewProfile }: ProfilePanelProps) => {
 
           {/* Stat cards */}
           <div className="grid grid-cols-2 gap-3 px-6 pb-6">
-            <StatCard icon={BookOpen} label="Courses" value={coursesCount !== null ? `${coursesCount} active` : null} />
-            <StatCard icon={BarChart3} label="GPA" value={gpa !== null ? String(gpa) : null} valueClass={gpaColor} />
-            <StatCard icon={CalendarDays} label="Next Class" value={nextClass || "No more classes today"} />
+            <StatCard icon={BookOpen} label="Courses" value={coursesValue} />
+            <StatCard icon={BarChart3} label="GPA" value={gpaValue} />
+            <StatCard icon={CalendarDays} label="Next Class" value={nextClass} />
             <StatCard icon={Plane} label="Mobility" value={mobilityStatus || "No active application"} />
             <StatCard
               icon={CreditCard}
               label="Balance"
-              value={balance !== null && balance !== undefined
-                ? (balance > 0 ? `₾ ${balance} due` : "✓ Paid")
-                : null}
-              valueClass={balance !== null ? (balance > 0 ? "text-destructive" : "text-success") : ""}
+              value={balanceValue}
+              valueClass={balanceNumber > 0 ? "text-destructive" : "text-success"}
             />
-            <StatCard icon={FileText} label="Documents" value={docsCount !== null ? `${docsCount} available` : null} />
+            <StatCard icon={FileText} label="Documents" value={documentsValue} />
           </div>
 
           {/* Footer */}

@@ -16,11 +16,7 @@ const TopNav = () => {
     <>
       <header className="h-16 bg-card border-b border-border flex items-center justify-between px-6 sticky top-0 z-30">
         <div className="flex items-center gap-3">
-          <img
-            src="https://tsu.ge/assets/images/logo/logo-ka.svg"
-            alt="TSU Logo"
-            className="h-9"
-          />
+          <img src="/tsu-logo.png" alt="TSU" style={{ height: "40px", width: "auto" }} />
           <span className="font-bold text-lg text-foreground hidden sm:block">TSU Student Portal</span>
         </div>
 

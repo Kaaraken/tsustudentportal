@@ -1,73 +1,107 @@
 import { Progress } from "@/components/ui/progress";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import SectionWrapper from "../SectionWrapper";
-import ProgramForm from "../forms/ProgramForm";
 
-const fallbackSemesters = [
-  { sem: "Fall 2024", courses: ["Calculus I", "Intro to CS", "Physics I", "Academic Writing"], credits: 16 },
-  { sem: "Spring 2025", courses: ["Calculus II", "OOP Programming", "Physics II", "Philosophy"], credits: 16 },
-  { sem: "Fall 2025", courses: ["Discrete Math", "Algorithms", "Electronics", "Statistics"], credits: 16 },
-  { sem: "Spring 2026", courses: ["Linear Algebra", "Data Structures", "Quantum Mech.", "English Lit."], credits: 16, current: true },
-];
+type ProgramCourse = {
+  index?: string;
+  name?: string;
+  status?: string;
+  ects?: string;
+  remainingCredits?: string;
+};
 
-const ProgramContent = () => {
-  const totalRequired = 128;
-  const completed = 60;
-  const gpa = 3.72;
+const parseNumber = (value?: string) => Number((value || "0").replace(/[^\d.]/g, "")) || 0;
+
+const ProgramContent = ({ raw }: { raw: any }) => {
+  const program = raw?.program ?? raw ?? {};
+  const courses: ProgramCourse[] = Array.isArray(program?.courses) ? program.courses : [];
+  const programName = (program?.programName || "").trim() || "კომპიუტერული მეცნიერება";
+  const totalEcts = courses.reduce((sum, course) => sum + parseNumber(course.ects), 0);
+  const remaining = courses.reduce((sum, course) => sum + parseNumber(course.remainingCredits), 0);
+  const completed = Math.max(totalEcts - remaining, 0);
+  const progress = totalEcts > 0 ? (completed / totalEcts) * 100 : 0;
 
   return (
-    <>
-      <h2 className="text-2xl font-bold text-foreground mb-1">Degree Program</h2>
-      <p className="text-muted-foreground text-sm mb-6">B.Sc. Computer Science & Mathematics</p>
+    <div>
+      <h2 className="text-2xl font-bold text-foreground mb-1">{programName}</h2>
+      <p className="text-muted-foreground text-sm mb-6">სასწავლო პროგრამა</p>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-        <div className="glass-card rounded-xl p-5 text-center">
-          <p className="text-4xl font-bold text-accent">{gpa}</p>
-          <p className="text-sm text-muted-foreground mt-1">Cumulative GPA</p>
+      <div className="glass-card rounded-xl p-5 mb-6">
+        <div className="flex justify-between text-sm mb-2">
+          <span className="text-muted-foreground">კრედიტების პროგრესი</span>
+          <span className="font-semibold text-foreground">
+            {completed} / {totalEcts} კრედიტი დასრულებული
+          </span>
         </div>
-        <div className="glass-card rounded-xl p-5">
-          <div className="flex justify-between text-sm mb-2">
-            <span className="text-muted-foreground">Credits</span>
-            <span className="font-semibold text-foreground">{completed}/{totalRequired}</span>
-          </div>
-          <Progress value={(completed / totalRequired) * 100} className="h-3" />
-          <p className="text-xs text-muted-foreground mt-2">{Math.round((completed / totalRequired) * 100)}% complete</p>
-        </div>
-        <div className="glass-card rounded-xl p-5 text-center">
-          <p className="text-4xl font-bold text-foreground">4<span className="text-lg text-muted-foreground">/8</span></p>
-          <p className="text-sm text-muted-foreground mt-1">Semesters Completed</p>
-        </div>
+        <Progress value={progress} className="h-3" />
       </div>
 
-      <h3 className="font-semibold text-foreground mb-4">Course Plan</h3>
-      <div className="space-y-4">
-        {fallbackSemesters.map((s: any) => (
-          <div key={s.sem} className={`glass-card rounded-xl p-5 ${s.current ? "ring-2 ring-accent" : ""}`}>
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <h4 className="font-semibold text-foreground">{s.sem}</h4>
-                {s.current && <span className="text-[10px] font-bold bg-accent/15 text-accent px-2 py-0.5 rounded-full uppercase">Current</span>}
-              </div>
-              <span className="text-sm text-muted-foreground">{s.credits} credits</span>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {s.courses.map((c: string) => (
-                <span key={c} className="text-xs bg-muted px-3 py-1.5 rounded-full text-foreground">{c}</span>
-              ))}
-            </div>
-          </div>
-        ))}
+      <div className="glass-card rounded-xl overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-border bg-muted/50">
+                <th className="text-left p-3 font-medium text-muted-foreground">#</th>
+                <th className="text-left p-3 font-medium text-muted-foreground">საგნის დასახელება</th>
+                <th className="text-left p-3 font-medium text-muted-foreground">სტატუსი</th>
+                <th className="text-left p-3 font-medium text-muted-foreground">ECTS</th>
+                <th className="text-left p-3 font-medium text-muted-foreground">დარჩენილი</th>
+              </tr>
+            </thead>
+            <tbody>
+              {courses.map((course, idx) => {
+                const isElective = course.status === "არჩევითი";
+                return (
+                  <tr key={`${course.index || idx}-${course.name || ""}`} className="border-b border-border last:border-0">
+                    <td className="p-3 text-muted-foreground">{course.index || idx + 1}</td>
+                    <td className="p-3 text-foreground">{course.name || "-"}</td>
+                    <td className="p-3">
+                      <Badge
+                        className={
+                          isElective
+                            ? "bg-blue-500/15 text-blue-600 border-0"
+                            : "bg-red-500/15 text-red-600 border-0"
+                        }
+                      >
+                        {course.status || "-"}
+                      </Badge>
+                    </td>
+                    <td className="p-3 text-foreground">{course.ects || "-"}</td>
+                    <td className="p-3 text-foreground">{course.remainingCredits || "-"}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+          {courses.length === 0 && (
+            <div className="p-6 text-sm text-muted-foreground">მონაცემები დროებით მიუწვდომელია</div>
+          )}
+        </div>
       </div>
-    </>
+    </div>
   );
 };
 
+const ProgramSkeleton = () => (
+  <div className="space-y-4">
+    <Skeleton className="h-8 w-72" />
+    <Skeleton className="h-4 w-40" />
+    <div className="glass-card rounded-xl p-5 space-y-3">
+      <Skeleton className="h-4 w-56" />
+      <Skeleton className="h-3 w-full" />
+    </div>
+    <div className="glass-card rounded-xl p-4 space-y-3">
+      {Array.from({ length: 5 }).map((_, i) => (
+        <Skeleton key={i} className="h-9 w-full" />
+      ))}
+    </div>
+  </div>
+);
+
 const ProgramSection = () => (
-  <SectionWrapper
-    sectionKey="program"
-    emptyForm={<ProgramForm />}
-    fallbackContent={<ProgramContent />}
-  >
-    {() => <ProgramContent />}
+  <SectionWrapper sectionKey="program" emptyForm={<ProgramContent raw={{}} />} fallbackContent={<ProgramContent raw={{}} />} loadingContent={<ProgramSkeleton />}>
+    {(data) => <ProgramContent raw={data} />}
   </SectionWrapper>
 );
 

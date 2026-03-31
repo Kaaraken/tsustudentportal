@@ -1,91 +1,102 @@
-import { DollarSign, CreditCard } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { DollarSign } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import SectionWrapper from "../SectionWrapper";
-import PaymentsForm from "../forms/PaymentsForm";
 
-const fallbackHistory = [
-  { date: "Mar 1, 2026", desc: "Tuition – Spring 2026", amount: "$4,250.00", status: "Paid" as const },
-  { date: "Feb 15, 2026", desc: "Lab Fee – Data Structures", amount: "$150.00", status: "Paid" as const },
-  { date: "Jan 20, 2026", desc: "Student Activity Fee", amount: "$75.00", status: "Paid" as const },
-  { date: "Apr 1, 2026", desc: "Library Late Fee", amount: "$12.50", status: "Pending" as const },
-];
+type PaymentTx = {
+  index?: string;
+  academicYear?: string;
+  description?: string;
+  type?: string;
+  amount?: string;
+  paid?: string;
+  balance?: string;
+};
 
-const breakdown = [
-  { item: "Tuition", amount: "$4,250.00" },
-  { item: "Lab Fees", amount: "$300.00" },
-  { item: "Technology Fee", amount: "$125.00" },
-  { item: "Student Activity Fee", amount: "$75.00" },
-  { item: "Health Insurance", amount: "$450.00" },
-];
+const parseBalanceInfo = (balanceDue?: string) => {
+  const text = balanceDue || "";
+  const balance = text.split("ჯამური დავალიანება:")[1]?.trim() || "0.00";
+  const status = text.split(",")[0]?.trim() || "აკადემიურ რეგისტრაციაზე: -";
+  const value = Number(balance.replace(/,/g, "")) || 0;
+  return { balance, status, value };
+};
 
-const PaymentsContent = () => (
-  <>
-    <h2 className="text-2xl font-bold text-foreground mb-6">Payments</h2>
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-      <div className="lg:col-span-1 gradient-gold rounded-xl p-6 text-navy-dark">
-        <DollarSign className="w-8 h-8 mb-2 opacity-80" />
-        <p className="text-sm font-medium opacity-80">Current Balance Due</p>
-        <p className="text-3xl font-bold mt-1">$12.50</p>
-        <Button size="sm" className="mt-4 bg-navy-dark text-primary-foreground hover:bg-navy">
-          <CreditCard className="w-4 h-4 mr-2" /> Make a Payment
-        </Button>
+const PaymentsContent = ({ raw }: { raw: any }) => {
+  const payments = raw?.payments ?? raw ?? {};
+  const transactions: PaymentTx[] = Array.isArray(payments?.transactions) ? payments.transactions : [];
+  const balanceDueText = String(payments?.balanceDue || "");
+  const { balance, status, value } = parseBalanceInfo(balanceDueText);
+
+  return (
+    <div>
+      <h2 className="text-2xl font-bold text-foreground mb-6">გადასახადები</h2>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+        <div className="lg:col-span-1 rounded-xl p-6 border border-border bg-card">
+          <DollarSign className="w-8 h-8 mb-2 text-muted-foreground" />
+          <p className="text-sm font-medium text-muted-foreground">ჯამური დავალიანება</p>
+          <p className={`text-3xl font-bold mt-1 ${value > 0 ? "text-red-600" : "text-green-600"}`}>{balance} ₾</p>
+          <Badge className="mt-3 bg-green-500/15 text-green-700 border-0">{status}</Badge>
+        </div>
+        <div className="lg:col-span-2 glass-card rounded-xl p-6">
+          <p className="text-sm text-muted-foreground">{balanceDueText || "მონაცემები მიუწვდომელია"}</p>
+        </div>
       </div>
-      <div className="lg:col-span-2 glass-card rounded-xl p-6">
-        <h3 className="font-semibold text-foreground mb-4">Spring 2026 Breakdown</h3>
-        <div className="space-y-3">
-          {breakdown.map((b) => (
-            <div key={b.item} className="flex justify-between text-sm">
-              <span className="text-muted-foreground">{b.item}</span>
-              <span className="font-medium text-foreground">{b.amount}</span>
-            </div>
-          ))}
-          <div className="border-t border-border pt-3 flex justify-between font-semibold text-foreground">
-            <span>Total</span>
-            <span>$5,200.00</span>
-          </div>
+
+      <div className="glass-card rounded-xl overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-border bg-muted/50">
+                <th className="text-left p-4 font-medium text-muted-foreground">აკადემიური წელი</th>
+                <th className="text-left p-4 font-medium text-muted-foreground">აღწერა</th>
+                <th className="text-right p-4 font-medium text-muted-foreground">თანხა</th>
+                <th className="text-right p-4 font-medium text-muted-foreground">ნაშთი</th>
+              </tr>
+            </thead>
+            <tbody>
+              {transactions.map((row, i) => {
+                const isPaid = (row.balance || "").trim() === "0.00";
+                return (
+                  <tr
+                    key={`${row.index || i}-${row.description || ""}`}
+                    className={`border-b border-border last:border-0 ${isPaid ? "bg-green-500/5" : "bg-yellow-500/10"}`}
+                  >
+                    <td className="p-4 text-muted-foreground">{row.academicYear || "-"}</td>
+                    <td className="p-4 text-foreground">{row.description || "-"}</td>
+                    <td className="p-4 text-right font-medium text-foreground">
+                      {row.amount ? `${row.amount} ${row.paid || ""}`.trim() : "-"}
+                    </td>
+                    <td className="p-4 text-right font-medium text-foreground">{row.balance || "-"}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+          {transactions.length === 0 && <div className="p-6 text-sm text-muted-foreground">ტრანზაქციები არ მოიძებნა</div>}
         </div>
       </div>
     </div>
-    <h3 className="font-semibold text-foreground mb-4">Payment History</h3>
-    <div className="glass-card rounded-xl overflow-hidden">
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-border bg-muted/50">
-              <th className="text-left p-4 font-medium text-muted-foreground">Date</th>
-              <th className="text-left p-4 font-medium text-muted-foreground">Description</th>
-              <th className="text-right p-4 font-medium text-muted-foreground">Amount</th>
-              <th className="text-right p-4 font-medium text-muted-foreground">Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {fallbackHistory.map((h, i) => (
-              <tr key={i} className="border-b border-border last:border-0">
-                <td className="p-4 text-muted-foreground">{h.date}</td>
-                <td className="p-4 text-foreground">{h.desc}</td>
-                <td className="p-4 text-right font-medium text-foreground">{h.amount}</td>
-                <td className="p-4 text-right">
-                  <Badge variant={h.status === "Paid" ? "default" : "secondary"} className={h.status === "Paid" ? "bg-success/15 text-success border-0" : "bg-warning/15 text-warning border-0"}>
-                    {h.status}
-                  </Badge>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+  );
+};
+
+const PaymentsSkeleton = () => (
+  <div className="space-y-4">
+    <Skeleton className="h-8 w-44" />
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <Skeleton className="h-36 w-full" />
+      <Skeleton className="h-36 w-full lg:col-span-2" />
     </div>
-  </>
+    <div className="glass-card rounded-xl p-4 space-y-3">
+      {Array.from({ length: 4 }).map((_, i) => (
+        <Skeleton key={i} className="h-10 w-full" />
+      ))}
+    </div>
+  </div>
 );
 
 const PaymentsSection = () => (
-  <SectionWrapper
-    sectionKey="payments"
-    emptyForm={<PaymentsForm />}
-    fallbackContent={<PaymentsContent />}
-  >
-    {() => <PaymentsContent />}
+  <SectionWrapper sectionKey="payments" emptyForm={<PaymentsContent raw={{}} />} fallbackContent={<PaymentsContent raw={{}} />} loadingContent={<PaymentsSkeleton />}>
+    {(data) => <PaymentsContent raw={data} />}
   </SectionWrapper>
 );
 

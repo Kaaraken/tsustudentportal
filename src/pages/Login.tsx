@@ -36,7 +36,7 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen gradient-navy flex items-center justify-center p-4 relative overflow-hidden">
+    <div className="min-h-screen gradient-navy flex items-center justify-center p-4 relative">
       {/* Geometric pattern overlay */}
       <div className="absolute inset-0 opacity-[0.07]">
         <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
@@ -52,9 +52,10 @@ const Login = () => {
       <div className="w-full max-w-md animate-fade-in relative z-10">
         <div className="text-center mb-8">
           <img
-            src="https://tsu.ge/assets/images/logo/logo-ka.svg"
-            alt="TSU Logo"
-            className="h-20 mx-auto mb-4"
+            src="/tsu-logo.png"
+            alt="TSU"
+            style={{ height: "80px", width: "auto" }}
+            className="mx-auto mb-4"
           />
           <h1 className="text-3xl font-bold text-primary-foreground">TSU Student Portal</h1>
           <p className="text-primary-foreground/60 mt-1">Tbilisi State University — Student Self-Service</p>

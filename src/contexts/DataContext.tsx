@@ -61,15 +61,50 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
     try {
       const res = await fetch(`${API_URL}/api/data/all`, { headers: headers() });
       if (res.ok) {
-        const data = await res.json();
+        const response = await res.json();
         const now = Date.now();
+
+        const scheduleData = response.sections?.schedule?.data?.schedule || [];
+        const paymentsData = response.sections?.payments?.data?.payments || {};
+        const programData = response.sections?.program?.data?.program || {};
+
         setSections({
-          courses: { data: data.courses?.data, stale: data.courses?.stale, empty: data.courses?.empty, lastUpdated: now },
-          schedule: { data: data.schedule?.data, stale: data.schedule?.stale, empty: data.schedule?.empty, lastUpdated: now },
-          mobility: { data: data.mobility?.data, stale: data.mobility?.stale, empty: data.mobility?.empty, lastUpdated: now },
-          program: { data: data.program?.data, stale: data.program?.stale, empty: data.program?.empty, lastUpdated: now },
-          payments: { data: data.payments?.data, stale: data.payments?.stale, empty: data.payments?.empty, lastUpdated: now },
-          documents: { data: data.documents?.data, stale: data.documents?.stale, empty: data.documents?.empty, lastUpdated: now },
+          courses: {
+            data: response.sections?.courses?.data ?? null,
+            stale: response.sections?.courses?.stale ?? true,
+            empty: response.sections?.courses?.empty,
+            lastUpdated: now
+          },
+          schedule: {
+            data: scheduleData,
+            stale: response.sections?.schedule?.stale ?? true,
+            empty: response.sections?.schedule?.empty,
+            lastUpdated: now
+          },
+          mobility: {
+            data: response.sections?.mobility?.data ?? null,
+            stale: response.sections?.mobility?.stale ?? true,
+            empty: response.sections?.mobility?.empty,
+            lastUpdated: now
+          },
+          program: {
+            data: programData,
+            stale: response.sections?.program?.stale ?? true,
+            empty: response.sections?.program?.empty,
+            lastUpdated: now
+          },
+          payments: {
+            data: paymentsData,
+            stale: response.sections?.payments?.stale ?? true,
+            empty: response.sections?.payments?.empty,
+            lastUpdated: now
+          },
+          documents: {
+            data: response.sections?.documents?.data ?? null,
+            stale: response.sections?.documents?.stale ?? true,
+            empty: response.sections?.documents?.empty,
+            lastUpdated: now
+          }
         });
       }
     } catch {
